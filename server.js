@@ -14,7 +14,17 @@ app.get('/', function(req, res) {
 });
 
 app.get('/todos', function(req, res) {
-    res.json(todos);
+    var queryParams = req.query;
+    var filtered = todos;
+
+    if (queryParams.hasOwnProperty('completed') &&
+        (queryParams.completed === 'true'
+            || queryParams.completed === 'false')) {
+        queryParams.completed = (queryParams.completed === 'true');
+        filtered = _.where(todos, { completed: queryParams.completed });
+    }
+
+    res.json(filtered);
 });
 
 app.post('/todos', function(req, res) {
@@ -65,7 +75,7 @@ app.put('/todos/:id', function(req, res) {
         return res.status(400).send();
 
     _.extend(matchedTodo, validAttrs);
-    res.json(matchedTodo); 
+    res.json(matchedTodo);
 });
 
 app.listen(PORT, function() {
