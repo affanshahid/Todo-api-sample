@@ -38,6 +38,13 @@ app.get('/todos/:id', function(req, res) {
     matchedTodo ? res.json(matchedTodo) : res.status(404).send();
 });
 
+app.delete('/todos/:id', function(req, res) {
+    var id = parseInt(req.params.id, 10);
+    var matchedTodo = _.findWhere(todos, { id: id });
+    todos = _.without(todos, matchedTodo);
+    matchedTodo ? res.json(matchedTodo) : res.status(404).send();
+});
+
 app.listen(PORT, function() {
     console.log('Server listening on port ' + PORT + '!');
 });
