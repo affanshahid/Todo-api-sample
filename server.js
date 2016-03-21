@@ -46,8 +46,15 @@ app.post('/todos', function(req, res) {
 
 app.get('/todos/:id', function(req, res) {
     var id = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, { id: id });
-    matchedTodo ? res.json(matchedTodo) : res.status(404).send();
+
+    db.todo.findById(id).then(function(todo) {
+        if (todo)
+            res.json(todo.toJSON());
+        else
+            res.status(404).send();
+    }, function(e) {
+        res.status(500).json(e);
+    });
 });
 
 app.delete('/todos/:id', function(req, res) {
