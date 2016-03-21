@@ -31,8 +31,8 @@ app.get('/todos', function(req, res) {
     db.todo.findAll({ where: where })
         .then(function(todos) {
             res.json(todos);
-        }, function(e) {
-            res.status(500).json(e);
+        }, function() {
+            res.status(500).send();
         });
 });
 
@@ -54,8 +54,8 @@ app.get('/todos/:id', function(req, res) {
             res.json(todo.toJSON());
         else
             res.status(404).send();
-    }, function(e) {
-        res.status(500).json(e);
+    }, function() {
+        res.status(500).send();
     });
 });
 
@@ -67,33 +67,37 @@ app.delete('/todos/:id', function(req, res) {
             res.status(204).send();
         else
             res.status(404).send();
-    }, function(e) {
-        res.status(500).json(e);
+    }, function() {
+        res.status(500).send();
     });
 });
 
 app.put('/todos/:id', function(req, res) {
     var id = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, { id: id });
     var body = _.pick(req.body, 'completed', 'description');
-    var validAttrs = {};
+    var attrs = {};
 
-    if (!matchedTodo)
-        return res.status(404).send();
+    if (body.hasOwnProperty('completed')) {
+        attrs.completed = body.completed;
+    }
 
-    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        validAttrs.completed = body.completed;
-    } else if (body.hasOwnProperty('completed'))
-        return res.status(400).send();
+    if (body.hasOwnProperty('description')) {
+        attrs.description = body.description;
+    }
 
-    if (body.hasOwnProperty('description') && _.isString(body.description)
-        && body.description.trim().length > 0) {
-        validAttrs.description = body.description;
-    } else if (body.hasOwnProperty('description'))
-        return res.status(400).send();
-
-    _.extend(matchedTodo, validAttrs);
-    res.json(matchedTodo);
+    db.todo.findById(id).then(function(todo) {
+        if (todo) {
+            todo.update(attrs).then(function(todo) {
+                res.json(todo.toJSON());
+            }, function(e) {
+                res.status(400).json(e);
+            });
+        } else {
+            res.status(404).send();
+        }
+    }, function() {
+        res.status(500).send();
+    });
 });
 
 db.sequelize.sync().then(function() {
