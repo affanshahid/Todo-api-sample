@@ -1,8 +1,9 @@
+/*globals Promise*/
 var _ = require('underscore');
 var bcrypt = require('bcrypt');
 
 module.exports = function(sequelize, DataTypes) {
-    return sequelize.define('user',
+    var user = sequelize.define('user',
         {
             email: {
                 type: DataTypes.STRING,
@@ -41,10 +42,30 @@ module.exports = function(sequelize, DataTypes) {
                         user.email = user.email.toLowerCase();
                 }
             },
+            classMethods: {
+                authenticate: function(loginData) {
+                    return new Promise(function(resolve, reject) {
+                        if (!_.isString(loginData.email) || !_.isString(loginData.password))
+                            return reject();
+
+                        user.findOne({ where: { email: loginData.email.toLowerCase() } })
+                            .then(function(user) {
+                                if (user && bcrypt.compareSync(loginData.password,
+                                    user.get('hashed_password')))
+                                    resolve(user);
+                                else
+                                    reject();
+                            }, function() {
+                                reject();
+                            });
+                    });
+                }
+            },
             instanceMethods: {
-                toPublicJSON: function () {
+                toPublicJSON: function() {
                     return _.omit(this.toJSON(), 'password', 'salt', 'hashed_password');
                 }
             }
         });
+    return user;
 };
