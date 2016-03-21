@@ -15,23 +15,25 @@ app.get('/', function(req, res) {
 });
 
 app.get('/todos', function(req, res) {
-    var queryParams = req.query;
-    var filtered = todos;
+    var query = req.query;
+    var where = {};
 
-    if (queryParams.hasOwnProperty('completed') &&
-        (queryParams.completed === 'true'
-            || queryParams.completed === 'false')) {
-        queryParams.completed = (queryParams.completed === 'true');
-        filtered = _.where(todos, { completed: queryParams.completed });
+    if (query.hasOwnProperty('completed') &&
+        (query.completed === 'true'
+            || query.completed === 'false')) {
+        where.completed = (query.completed === 'true');
     }
 
-    if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
-        filtered = filtered.filter(function(todo) {
-            return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) != -1;
+    if (query.hasOwnProperty('q') && query.q.length > 0) {
+        where.description = { $like: '%' + query.q + '%' };
+    }
+
+    db.todo.findAll({ where: where })
+        .then(function(todos) {
+            res.json(todos);
+        }, function(e) {
+            res.status(500).json(e);
         });
-    }
-
-    res.json(filtered);
 });
 
 app.post('/todos', function(req, res) {
