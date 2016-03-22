@@ -1,7 +1,6 @@
 var _ = require('underscore');
 var express = require('express');
 var bodyParser = require('body-parser');
-var bcrypt = require('bcrypt');
 var db = require('./db.js');
 
 var app = express();
@@ -115,7 +114,12 @@ app.post('/users/login', function(req, res) {
     var loginData = _.pick(req.body, 'email', 'password');
 
     db.user.authenticate(loginData).then(function(user) {
-        res.json(user.toPublicJSON());
+        var token = user.generateToken('authentication');
+
+        if (token)
+            res.header('Auth', user.generateToken('authentication')).json(user.toPublicJSON());
+        else
+            res.status(401).send();
     }, function() {
         res.status(401).send();
     });
