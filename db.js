@@ -20,6 +20,7 @@ var db = {};
 
 db.todo = sequelize.import('./models/todo.js');
 db.user = sequelize.import('./models/user.js');
+db.token = sequelize.import('./models/token.js');
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
